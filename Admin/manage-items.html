@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ઉત્પાદનો મેનેજ - ચામુંડા ચા નાસ્તા</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --primary-dark: #b71c1c;
+            --secondary: #4CAF50;
+            --dark: #333;
+            --light: #f8f9fa;
+            --gray: #666;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: var(--dark);
+        }
+        
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 250px;
+            background: var(--dark);
+            color: white;
+            padding: 1.5rem 0;
+        }
+        
+        .logo {
+            text-align: center;
+            padding: 0 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo h2 {
+            font-size: 1.5rem;
+            margin-top: 10px;
+        }
+        
+        .nav-links {
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-bottom: 5px;
+        }
+        
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background: rgba(211, 47, 47, 0.2);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .nav-links i {
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+        
+        .logout {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            padding: 0 25px;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            color: var(--primary);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+        }
+        
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        /* Product Form */
+        .product-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Products Table */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            background: #f8f9fa;
+            border-bottom: 2px solid #eee;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .action-btn {
+            padding: 5px 12px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .action-btn.edit {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .action-btn.delete {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Check if admin is logged in -->
+    <script>
+        if (!localStorage.getItem('admin_logged_in')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-utensils" style="font-size: 2rem; color: var(--primary);"></i>
+            <h2>એડમિન</h2>
+        </div>
+        
+        <ul class="nav-links">
+            <li><a href="dashboard.html">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>ડેશબોર્ડ</span>
+            </a></li>
+            <li><a href="manage-items.html" class="active">
+                <i class="fas fa-box"></i>
+                <span>ઉત્પાદનો</span>
+            </a></li>
+            <li><a href="orders.html">
+                <i class="fas fa-shopping-cart"></i>
+                <span>ઓર્ડર્સ</span>
+            </a></li>
+            <li><a href="#">
+                <i class="fas fa-users"></i>
+                <span>ગ્રાહકો</span>
+            </a></li>
+            <li><a href="#">
+                <i class="fas fa-chart-line"></i>
+                <span>રિપોર્ટ્સ</span>
+            </a></li>
+        </ul>
+        
+        <div class="logout">
+            <a href="#" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>લોગઆઉટ</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1>ઉત્પાદનો મેનેજમેન્ટ</h1>
+            <button class="btn" onclick="showAddForm()">નવું ઉત્પાદન ઉમેરો</button>
+        </div>
+
+        <!-- Add/Edit Product Form -->
+        <div class="section" id="productFormSection" style="display: none;">
+            <h2 style="margin-bottom: 1.5rem; color: var(--primary);" id="formTitle">નવું ઉત્પાદન ઉમેરો</h2>
+            
+            <form id="productForm" class="product-form">
+                <div class="form-group">
+                    <label for="productName">ઉત્પાદનનું નામ *</label>
+                    <input type="text" id="productName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="productPrice">કિંમત (₹) *</label>
+                    <input type="number" id="productPrice" required min="1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="productCategory">કેટેગરી *</label>
+                    <select id="productCategory" required>
+                        <option value="">પસંદ કરો</option>
+                        <option value="tea">ચા</option>
+                        <option value="coffee">કોફી</option>
+                        <option value="pan">પાન</option>
+                        <option value="snacks">સ્નેક્સ</option>
+                        <option value="breakfast">નાસ્તો</option>
+                        <option value="drinks">પીણાં</option>
+                        <option value="dessert">મીઠાઈ</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="productDescription">વર્ણન</label>
+                    <textarea id="productDescription"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="productIcon">આઈકોન (FontAwesome કોડ)</label>
+                    <input type="text" id="productIcon" value="fas fa-utensils">
+                    <small style="color: var(--gray);">ઉદાહરણ: fas fa-mug-hot, fas fa-coffee</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn" id="submitBtn">સેવ કરો</button>
+                    <button type="button" class="btn" style="background: var(--gray);" onclick="hideForm()">રદ કરો</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Products List -->
+        <div class="section">
+            <h2 style="margin-bottom: 1.5rem; color: var(--primary);">ઉત્પાદનોની સૂચિ</h2>
+            
+            <div class="table-container">
+                <table id="productsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>નામ</th>
+                            <th>કિંમત</th>
+                            <th>કેટેગરી</th>
+                            <th>વર્ણન</th>
+                            <th>ક્રિયાઓ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Products will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let products = [];
+        let editingProductId = null;
+
+        // Load products on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProducts();
+            
+            // Check if editing product
+            const editId = localStorage.getItem('edit_product_id');
+            if (editId) {
+                editProduct(editId);
+                localStorage.removeItem('edit_product_id');
+            }
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('admin_logged_in');
+            window.location.href = 'index.html';
+        }
+
+        // Load products from localStorage
+        function loadProducts() {
+            products = JSON.parse(localStorage.getItem('chamunda_products')) || [];
+            
+            // If no products, create sample data
+            if (products.length === 0) {
+                products = [
+                    {
+                        id: 1,
+                        name: 'મસાલા ચા',
+                        description: 'તાજા મસાલા અને દૂધથી બનાવેલી',
+                        price: 20,
+                        category: 'tea',
+                        image: 'fas fa-mug-hot'
+                    },
+                    {
+                        id: 2,
+                        name: 'ફિલ્ટર કોફી',
+                        description: 'ઉત્તમ ક્વોલિટીની કોફી બીન્સથી',
+                        price: 30,
+                        category: 'coffee',
+                        image: 'fas fa-coffee'
+                    }
+                ];
+                localStorage.setItem('chamunda_products', JSON.stringify(products));
+            }
+            
+            displayProducts();
+            
+            // Also update main website products
+            localStorage.setItem('chamunda_products', JSON.stringify(products));
+        }
+
+        // Display products in table
+        function displayProducts() {
+            const tableBody = document.querySelector('#productsTable tbody');
+            tableBody.innerHTML = '';
+            
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.id}</td>
+                    <td>${product.name}</td>
+                    <td>₹${product.price}</td>
+                    <td>${getCategoryText(product.category)}</td>
+                    <td>${product.description}</td>
+                    <td>
+                        <button class="action-btn edit" onclick="editProduct(${product.id})">
+                            <i class="fas fa-edit"></i> એડિટ
+                        </button>
+                        <button class="action-btn delete" onclick="deleteProduct(${product.id})">
+                            <i class="fas fa-trash"></i> ડિલીટ
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Get category text in Gujarati
+        function getCategoryText(category) {
+            const categories = {
+                'tea': 'ચા',
+                'coffee': 'કોફી',
+                'pan': 'પાન',
+                'snacks': 'સ્નેક્સ',
+                'breakfast': 'નાસ્તો',
+                'drinks': 'પીણાં',
+                'dessert': 'મીઠાઈ'
+            };
+            return categories[category] || category;
+        }
+
+        // Show add product form
+        function showAddForm() {
+            editingProductId = null;
+            document.getElementById('formTitle').textContent = 'નવું ઉત્પાદન ઉમેરો';
+            document.getElementById('productForm').reset();
+            document.getElementById('productFormSection').style.display = 'block';
+            document.getElementById('submitBtn').textContent = 'ઉમેરો';
+        }
+
+        // Hide form
+        function hideForm() {
+            document.getElementById('productFormSection').style.display = 'none';
+        }
+
+        // Edit product
+        function editProduct(productId) {
+            const product = products.find(p => p.id == productId);
+            if (!product) return;
+            
+            editingProductId = productId;
+            
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productPrice').value = product.price;
+            document.getElementById('productCategory').value = product.category;
+            document.getElementById('productDescription').value = product.description;
+            document.getElementById('productIcon').value = product.image || 'fas fa-utensils';
+            
+            document.getElementById('formTitle').textContent = 'ઉત્પાદન એડિટ કરો';
+            document.getElementById('productFormSection').style.display = 'block';
+            document.getElementById('submitBtn').textContent = 'અપડેટ કરો';
+        }
+
+        // Delete product
+        function deleteProduct(productId) {
+            if (confirm('શું તમે આ ઉત્પાદન ડિલીટ કરવા માંગો છો?')) {
+                products = products.filter(p => p.id != productId);
+                localStorage.setItem('chamunda_products', JSON.stringify(products));
+                displayProducts();
+                alert('ઉત્પાદન ડિલીટ થઈ ગયું');
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const productData = {
+                name: document.getElementById('productName').value,
+                price: parseFloat(document.getElementById('productPrice').value),
+                category: document.getElementById('productCategory').value,
+                description: document.getElementById('productDescription').value,
+                image: document.getElementById('productIcon').value || 'fas fa-utensils'
+            };
+            
+            if (editingProductId) {
+                // Update existing product
+                const index = products.findIndex(p => p.id == editingProductId);
+                if (index !== -1) {
+                    products[index] = { ...products[index], ...productData };
+                }
+            } else {
+                // Add new product
+                const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+                productData.id = newId;
+                products.push(productData);
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('chamunda_products', JSON.stringify(products));
+            
+            // Update display
+            displayProducts();
+            
+            // Hide form
+            hideForm();
+            
+            // Show success message
+            alert(editingProductId ? 'ઉત્પાદન અપડેટ થઈ ગયું' : 'ઉત્પાદન ઉમેરાઈ ગયું');
+            
+            // Reset editing ID
+            editingProductId = null;
+        });
+    </script>
+</body>
+                      </html>
