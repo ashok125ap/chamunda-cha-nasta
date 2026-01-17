@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ઓર્ડર મેનેજ - ચામુંડા ચા નાસ્તા</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --primary-dark: #b71c1c;
+            --secondary: #4CAF50;
+            --dark: #333;
+            --light: #f8f9fa;
+            --gray: #666;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: var(--dark);
+        }
+        
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: 250px;
+            background: var(--dark);
+            color: white;
+            padding: 1.5rem 0;
+        }
+        
+        .logo {
+            text-align: center;
+            padding: 0 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo h2 {
+            font-size: 1.5rem;
+            margin-top: 10px;
+        }
+        
+        .nav-links {
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-bottom: 5px;
+        }
+        
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-links a:hover, .nav-links a.active {
+            background: rgba(211, 47, 47, 0.2);
+            color: white;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .nav-links i {
+            margin-right: 12px;
+            font-size: 1.2rem;
+        }
+        
+        .logout {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            padding: 0 25px;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            color: var(--primary);
+        }
+        
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .filter-btn:hover {
+            background: #f0f0f0;
+        }
+        
+        .filter-btn.active:hover {
+            background: var(--primary-dark);
+        }
+        
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            background: #f8f9fa;
+            border-bottom: 2px solid #eee;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status.processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .action-btn {
+            padding: 5px 12px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .action-btn.view {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .action-btn.complete {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .action-btn.delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        /* Order Details Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+        
+        .order-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 2rem;
+        }
+        
+        .detail-group h4 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .detail-group p {
+            margin-bottom: 5px;
+        }
+        
+        .items-list {
+            margin: 1.5rem 0;
+        }
+        
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .order-total {
+            text-align: right;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <!-- Check if admin is logged in -->
+    <script>
+        if (!localStorage.getItem('admin_logged_in')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <i class="fas fa-utensils" style="font-size: 2rem; color: var(--primary);"></i>
+            <h2>એડમિન</h2>
+        </div>
+        
+        <ul class="nav-links">
+            <li><a href="dashboard.html">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>ડેશબોર્ડ</span>
+            </a></li>
+            <li><a href="manage-items.html">
+                <i class="fas fa-box"></i>
+                <span>ઉત્પાદનો</span>
+            </a></li>
+            <li><a href="orders.html" class="active">
+                <i class="fas fa-shopping-cart"></i>
+                <span>ઓર્ડર્સ</span>
+            </a></li>
+            <li><a href="#">
+                <i class="fas fa-users"></i>
+                <span>ગ્રાહકો</span>
+            </a></li>
+        </ul>
+        
+        <div class="logout">
+            <a href="#" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>લોગઆઉટ</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1>ઓર્ડર મેનેજમેન્ટ</h1>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterOrders('all')">બધા</button>
+            <button class="filter-btn" onclick="filterOrders('pending')">પેન્ડિંગ</button>
+            <button class="filter-btn" onclick="filterOrders('processing')">પ્રોસેસિંગ</button>
+            <button class="filter-btn" onclick="filterOrders('completed')">કમ્પ્લીટ</button>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="section">
+            <div class="table-container">
+                <table id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>ઓર્ડર ID</th>
+                            <th>ગ્રાહક</th>
+                            <th>ફોન</th>
+                            <th>કુલ</th>
+                            <th>સ્થિતિ</th>
+                            <th>તારીખ</th>
+                            <th>ક્રિયાઓ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Orders will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="color: var(--primary);">ઓર્ડર વિગતો</h3>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            
+            <div id="orderDetails">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let orders = [];
+        let filteredOrders = [];
+        let currentFilter = 'all';
+
+        // Load orders on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrders();
+            
+            // Check if viewing specific order
+            const viewId = localStorage.getItem('view_order_id');
+            if (viewId) {
+                viewOrderDetails(viewId);
+                localStorage.removeItem('view_order_id');
+            }
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('admin_logged_in');
+            window.location.href = 'index.html';
+        }
+
+        // Load orders from localStorage
+        function loadOrders() {
+            orders = JSON.parse(localStorage.getItem('chamunda_orders')) || [];
+            filterOrders(currentFilter);
+        }
+
+        // Filter orders by status
+        function filterOrders(status) {
+            currentFilter = status;
+            filteredOrders = status === 'all' 
+                ? [...orders] 
+                : orders.filter(order => order.status === status);
+            
+            // Update active filter button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === getFilterText(status)) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            displayOrders();
+        }
+
+        // Get filter text in Gujarati
+        function getFilterText(status) {
+            const filters = {
+                'all': 'બધા',
+                'pending': 'પેન્ડિંગ',
+                'processing': 'પ્રોસેસિંગ',
+                'completed': 'કમ્પ્લીટ'
+            };
+            return filters[status] || status;
+        }
+
+        // Display orders in table
+        function displayOrders() {
+            const tableBody = document.querySelector('#ordersTable tbody');
+            tableBody.innerHTML = '';
+            
+            // Sort by date (newest first)
+            const sortedOrders = [...filteredOrders].sort((a, b) => 
+                new Date(b.date) - new Date(a.date)
+            );
+            
+            sortedOrders.forEach(order => {
+                const row = document.createElement('tr');
+                const date = new Date(order.date).toLocaleString('gu-IN');
+                
+                row.innerHTML = `
+                    <td>#${order.id}</td>
+                    <td>${order.customerName}</td>
+                    <td>${order.customerPhone}</td>
+                    <td>₹${order.total}</td>
+                    <td><span class="status ${order.status}">${getStatusText(order.status)}</span></td>
+                    <td>${date}</td>
+                    <td>
+                        <button class="action-btn view" onclick="viewOrderDetails(${order.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn complete" onclick="updateOrderStatus(${order.id}, 'completed')" ${order.status === 'completed' ? 'disabled' : ''}>
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="action-btn delete" onclick="deleteOrder(${order.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Get status text in Gujarati
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'પેન્ડિંગ',
+                'processing': 'પ્રોસેસિંગ',
+                'completed': 'કમ્પ્લીટ'
+            };
+            return statusMap[status] || status;
+        }
+
+        // View order details
+        function viewOrderDetails(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            const modal = document.getElementById('orderModal');
+            const details = document.getElementById('orderDetails');
+            
+            // Format date
+            const date = new Date(order.date).toLocaleString('gu-IN');
+            
+            // Build order items HTML
+            let itemsHtml = '';
+            order.items.forEach(item => {
+                itemsHtml += `
+                    <div class="item-row">
+                        <div>${item.name}</div>
+                        <div>${item.quantity} x ₹${item.price} = ₹${item.quantity * item.price}</div>
+                    </div>
+                `;
+            });
+            
+            // Build order details HTML
+            details.innerHTML = `
+                <div class="order-details-grid">
+                    <div class="detail-group">
+                        <h4>ગ્રાહક માહિતી</h4>
+                        <p><strong>નામ:</strong> ${order.customerName}</p>
+                        <p><strong>ફોન:</strong> ${order.customerPhone}</p>
+                        <p><strong>સરનામું:</strong> ${order.customerAddress}</p>
+                    </div>
+                    
+                    <div class="detail-group">
+                        <h4>ઓર્ડર માહિતી</h4>
+                        <p><strong>ઓર્ડર ID:</strong> #${order.id}</p>
+                        <p><strong>તારીખ:</strong> ${date}</p>
+                        <p><strong>પેમેન્ટ:</strong> ${order.paymentMethod === 'cash' ? 'કૅશ ઓન ડિલિવરી' : 'UPI'}</p>
+                        <p><strong>સ્થિતિ:</strong> <span class="status ${order.status}">${getStatusText(order.status)}</span></p>
+                    </div>
+                </div>
+                
+                <h4 style="color: var(--primary); margin-top: 1.5rem;">ઓર્ડર આઇટમ્સ</h4>
+                <div class="items-list">
+                    ${itemsHtml}
+                </div>
+                
+                <div class="order-total">
+                    કુલ રકમ: ₹${order.total}
+                </div>
+                
+                <div style="margin-top: 2rem; display: flex; gap: 10px;">
+                    <button class="action-btn complete" onclick="updateOrderStatus(${order.id}, 'processing')" ${order.status !== 'pending' ? 'disabled' : ''}>
+                        <i class="fas fa-play"></i> પ્રોસેસ કરો
+                    </button>
+                    <button class="action-btn complete" onclick="updateOrderStatus(${order.id}, 'completed')" ${order.status === 'completed' ? 'disabled' : ''}>
+                        <i class="fas fa-check"></i> કમ્પ્લીટ કરો
+                    </button>
+                    <button class="action-btn delete" onclick="deleteOrder(${order.id})">
+                        <i class="fas fa-trash"></i> ડિલીટ કરો
+                    </button>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+
+        // Update order status
+        function updateOrderStatus(orderId, status) {
+            const orderIndex = orders.findIndex(order => order.id === orderId);
+            
+            if (orderIndex !== -1) {
+                orders[orderIndex].status = status;
+                localStorage.setItem('chamunda_orders', JSON.stringify(orders));
+                
+                // Reload data
+                loadOrders();
+                
+                // Update modal if open
+                const modal = document.getElementById('orderModal');
+                if (modal.style.display === 'flex') {
+                    viewOrderDetails(orderId);
+                }
+                
+                alert('ઓર્ડર સ્ટેટસ અપડેટ થઈ ગયું');
+            }
+        }
+
+        // Delete order
+        function deleteOrder(orderId) {
+            if (confirm('શું તમે આ ઓર્ડર ડિલીટ કરવા માંગો છો?')) {
+                orders = orders.filter(order => order.id !== orderId);
+                localStorage.setItem('chamunda_orders', JSON.stringify(orders));
+                loadOrders();
+                
+                // Close modal if open
+                document.getElementById('orderModal').style.display = 'none';
+                
+                alert('ઓર્ડર ડિલીટ થઈ ગયું');
+            }
+        }
+
+        // Close modal
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('orderModal').style.display = 'none';
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('orderModal');
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+                          </html>
